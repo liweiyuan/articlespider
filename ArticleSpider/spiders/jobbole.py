@@ -54,3 +54,8 @@ class JobboleSpider(scrapy.Spider):
         tag_list = [element for element in tag_list if not element.strip().endswith("评论")]
         tags = ",".join(tag_list)
         pass
+
+
+    '''
+      extract_first() dealwith exception.
+    '''
