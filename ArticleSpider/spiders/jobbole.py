@@ -20,7 +20,7 @@ class JobboleSpider(scrapy.Spider):
         '''
 
         # 解析列表中的url并交给scrapy进行下载
-        post_urls = response.css(".post.floated-thumb .post-thumb a::attr(href)").extract()
+        post_urls = response.css("#archive .floated-thumb .post-thumb a::attr(href)").extract()
         # archive > div:nth-child(1) > div.post-thumb > a
         # archive > div:nth-child(2) > div.post-thumb > a
         for post_url in post_urls:
