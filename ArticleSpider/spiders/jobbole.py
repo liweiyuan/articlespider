@@ -90,6 +90,8 @@ class JobboleSpider(scrapy.Spider):
         tags = ",".join(tag_list)
         pass
 
+
+
     '''
       extract_first() 处理异常，有一个默认的值
     '''
