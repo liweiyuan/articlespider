@@ -8,6 +8,7 @@
 import codecs
 import json
 
+import MySQLdb
 # spider自带的组件进行格式转换
 from scrapy.exporters import JsonItemExporter
 from scrapy.pipelines.images import ImagesPipeline
@@ -19,9 +20,26 @@ class ArticlespiderPipeline(object):
         return item
 
 
+# 定义自己的pipeline来存储数据到mysql
+class MysqlPipeline(object):
+    def __init__(self):
+        self.conn = MySQLdb.connect('localhost', 'root', 'lwy19998273333', 'article_spider', charset='utf8',
+                                    use_unicode=True)
+        self.cursor = self.conn.cursor()
+
+    def process_item(self, item, spider):
+        insert_sql = '''
+            insert into article(title,url,create_date,fav_nums)
+            VALUES (%s,%s,%s,%s)
+        '''
+        # 同步的操作
+        self.cursor.execute(insert_sql, (item["title"], item["url"], item["create_date"], item["fav_nums"]))
+        self.conn.commit()
+
+
 # 保存数据
 class JsonWithEncodingPipeline(object):
-    #自定义json文件的导出
+    # 自定义json文件的导出
     # 打开json文件,初始化的时候打开
     def __init__(self):
         self.file = codecs.open("article.json", "w", encoding="utf-8")
@@ -31,16 +49,18 @@ class JsonWithEncodingPipeline(object):
         lines = json.dumps(dict(item), ensure_ascii=False) + "\n"
         self.file.write(lines)
         return item
-    #关闭文件
-    def spider_close(self,spider):
+
+    # 关闭文件
+    def spider_close(self, spider):
         self.file.close()
 
-#自带的json格式
+
+# 自带的json格式
 class JsonItemExporterPipeline(object):
-    #调用scrapy自带的json exporter导出json文件
+    # 调用scrapy自带的json exporter导出json文件
     def __init__(self):
-        self.file=open("articleexport.json","wb")
-        self.exporter=JsonItemExporter(self.file,encoding="utf-8",ensure_ascii=False)
+        self.file = open("articleexport.json", "wb")
+        self.exporter = JsonItemExporter(self.file, encoding="utf-8", ensure_ascii=False)
         self.exporter.start_exporting()
 
     def close_spider(self):
@@ -50,6 +70,7 @@ class JsonItemExporterPipeline(object):
     def process_item(self, item, spider):
         self.exporter.export_item(item)
         return item
+
 
 # 自己定制图片路由的pipelines--继承ImagesPipeline
 class ArticleImagePipeline(ImagesPipeline):

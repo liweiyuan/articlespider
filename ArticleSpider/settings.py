@@ -67,9 +67,11 @@ ROBOTSTXT_OBEY = False
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    'ArticleSpider.pipelines.JsonItemExporterPipeline': 2,
+    #'ArticleSpider.pipelines.JsonItemExporterPipeline': 2,
     #'scrapy.pipelines.images.ImagesPipeline': 1,
-    'ArticleSpider.pipelines.ArticleImagePipeline': 1,
+    #'ArticleSpider.pipelines.ArticleImagePipeline': 1,
+    'ArticleSpider.pipelines.MysqlPipeline': 1,
+
 }
 IMAGES_URLS_FIELD = "front_image_url"
 # 获取当前文件的路径
