@@ -65,7 +65,7 @@ class MysqlTwistedPipeline(object):
     def process_item(self, item, spider):
         # 使用twisted将mysql插入变成异步执行
         query = self.dbpool.runInteraction(self.do_insert, item)
-        query.addErrback(self.handler_error) #处理异常
+        query.addErrback(self.handler_error)  # 处理异常
 
     # 异步处理
     def handler_error(self, failure):
@@ -75,11 +75,16 @@ class MysqlTwistedPipeline(object):
     def do_insert(self, cursor, item):
         # 执行具体的插入
         insert_sql = '''
-                    insert into article(title,url,create_date,fav_nums)
-                    VALUES (%s,%s,%s,%s)
+                    insert into article(title,url,create_date,fav_nums,
+                    url_object_id,front_image_url,comment_nums,praise_nums,tags,content)
+                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                 '''
         # 同步的操作
-        cursor.execute(insert_sql, (item["title"], item["url"], item["create_date"], item["fav_nums"]))
+        cursor.execute(insert_sql,
+                       (item["title"], item["url"], item["create_date"],
+                        item["fav_nums"], item["url_object_id"], item["front_image_url"],
+                       item["comment_nums"], item["praise_nums"], item["tags"],
+                       item["content"]))
 
 
 # 保存数据
