@@ -9,9 +9,12 @@ import codecs
 import json
 
 import MySQLdb
+import MySQLdb.cursors
 # spider自带的组件进行格式转换
 from scrapy.exporters import JsonItemExporter
 from scrapy.pipelines.images import ImagesPipeline
+# twisted异步调用框架
+from twisted.enterprise import adbapi
 
 
 # 主要做数据存储
@@ -35,6 +38,48 @@ class MysqlPipeline(object):
         # 同步的操作
         self.cursor.execute(insert_sql, (item["title"], item["url"], item["create_date"], item["fav_nums"]))
         self.conn.commit()
+
+
+# mysql连接池，通过scrapy来实现。
+# twisted提供的框架
+class MysqlTwistedPipeline(object):
+
+    def __init__(self, dbpool):
+        self.dbpool = dbpool
+
+    # 注意方法的名字不能写错
+    @classmethod
+    def from_settings(cls, settings):
+        dbprams = dict(
+            host=settings["MYSQL_HOST"],
+            db=settings["MYSQL_DBNAME"],
+            user=settings["MYSQL_USER"],
+            password=settings["MYSQL_PASSWORD"],
+            charset="utf8",
+            cursorclass=MySQLdb.cursors.DictCursor,
+            use_unicode=True,
+        )
+        dppool = adbapi.ConnectionPool("MySQLdb", **dbprams)
+        return cls(dppool)
+
+    def process_item(self, item, spider):
+        # 使用twisted将mysql插入变成异步执行
+        query = self.dbpool.runInteraction(self.do_insert, item)
+        query.addErrback(self.handler_error) #处理异常
+
+    # 异步处理
+    def handler_error(self, failure):
+        # 处理异步插入的异常
+        print(failure)
+
+    def do_insert(self, cursor, item):
+        # 执行具体的插入
+        insert_sql = '''
+                    insert into article(title,url,create_date,fav_nums)
+                    VALUES (%s,%s,%s,%s)
+                '''
+        # 同步的操作
+        cursor.execute(insert_sql, (item["title"], item["url"], item["create_date"], item["fav_nums"]))
 
 
 # 保存数据
