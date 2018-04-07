@@ -83,8 +83,8 @@ class MysqlTwistedPipeline(object):
         cursor.execute(insert_sql,
                        (item["title"], item["url"], item["create_date"],
                         item["fav_nums"], item["url_object_id"], item["front_image_url"],
-                       item["comment_nums"], item["praise_nums"], item["tags"],
-                       item["content"]))
+                        item["comment_nums"], item["praise_nums"], item["tags"],
+                        item["content"]))
 
 
 # 保存数据
@@ -126,7 +126,8 @@ class JsonItemExporterPipeline(object):
 class ArticleImagePipeline(ImagesPipeline):
 
     def item_completed(self, results, item, info):
-        for ok, value in results:
-            images_file_path = value["path"]
-        item["front_image_path"] = images_file_path
+        if "front_image_url" in item:
+            for ok, value in results:
+                images_file_path = value["path"]
+            item["front_image_path"] = images_file_path
         return item
